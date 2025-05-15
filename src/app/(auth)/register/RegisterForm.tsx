@@ -8,14 +8,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { registerUser } from '@/app/actions/authActions';
 
 export default function RegisterForm() {
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
+        setError,
+        formState: { errors, isValid, isSubmitting },
     } = useForm<RegisterSchema>({
-        resolver: zodResolver(registerSchema),
+       // resolver: zodResolver(registerSchema),
         mode: "onTouched",
     });
 
@@ -23,8 +25,21 @@ export default function RegisterForm() {
 
     const toggleVisibility = () => setIsVisible(!isVisibile);
 
-    const onSubmit = (data: RegisterSchema) => {
-        console.log(data);
+    const onSubmit = async (data: RegisterSchema) => {
+        const result = await registerUser(data);
+        
+        if (result.status === 'success') {
+            console.log('User registered successfully!');
+        } else {
+            if (Array.isArray(result.error)) {
+                result.error.forEach((e) => {
+                    const fieldName = e.path.join('.') as 'name' | 'email' | 'password';
+                    setError(fieldName, {message: e.message});
+                });
+            } else {
+                setError('root.serverError', {message: result.error});
+            }
+        }
     };
 
     return (
@@ -44,14 +59,14 @@ export default function RegisterForm() {
                 <form onSubmit={handleSubmit(onSubmit)}>
                     <div className="space-y-4">
                         <Input
-                            label="Username"
-                            type="username"
+                            label="Name"
+                            type="text"
                             variant="bordered"
-                            placeholder="Enter username"
-                            {...register("username")}
-                            isInvalid={!!errors.username}
-                            aria-invalid={errors.username ? "true" : "false"}
-                            errorMessage={errors.username?.message}
+                            placeholder="Enter name"
+                            {...register("name")}
+                            isInvalid={!!errors.name}
+                            aria-invalid={errors.name ? "true" : "false"}
+                            errorMessage={errors.name?.message}
                         />
                         <Input
                             label="Email"
@@ -87,7 +102,11 @@ export default function RegisterForm() {
                             }
                             {...register("password")}
                         />
+                        {errors.root?.serverError && (
+                            <p className='text-danger text-sm'>{errors.root.serverError.message}</p>
+                        )}
                         <Button
+                        isLoading={isSubmitting}
                             isDisabled={!isValid}
                             fullWidth
                             color="secondary"
