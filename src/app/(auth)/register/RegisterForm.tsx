@@ -17,7 +17,7 @@ export default function RegisterForm() {
         setError,
         formState: { errors, isValid, isSubmitting },
     } = useForm<RegisterSchema>({
-       resolver: zodResolver(registerSchema),
+        resolver: zodResolver(registerSchema),
         mode: "onTouched",
     });
 
@@ -106,7 +106,7 @@ export default function RegisterForm() {
                             <p className='text-danger text-sm'>{errors.root.serverError.message}</p>
                         )}
                         <Button
-                        isLoading={isSubmitting}
+                            isLoading={isSubmitting}
                             isDisabled={!isValid}
                             fullWidth
                             color="secondary"

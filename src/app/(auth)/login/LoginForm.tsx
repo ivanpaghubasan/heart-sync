@@ -9,12 +9,16 @@ import { useForm } from "react-hook-form";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import { loginSchema, LoginSchema } from "@/lib/schemas/loginSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signInUser } from '@/app/actions/authActions';
+import { useRouter } from 'next/navigation';
+import { toast } from 'react-toastify';
 
 export default function LoginForm() {
+    const router = useRouter();
     const {
         register,
         handleSubmit,
-        formState: { errors, isValid },
+        formState: { errors, isValid, isSubmitting },
     } = useForm<LoginSchema>({
         resolver: zodResolver(loginSchema),
         mode: "onTouched",
@@ -23,8 +27,14 @@ export default function LoginForm() {
 
     const toggleVisibility = () => setIsVisible(!isVisibile);
 
-    const onSubmit = (data: LoginSchema) => {
-        console.log(data);
+    const onSubmit = async (data: LoginSchema) => {
+        const result = await signInUser(data);
+        if (result.status === 'success') {
+            router.push('/members');
+            router.refresh();
+        } else {
+            toast.error(result.error as string);
+        }
     };
 
     return (
@@ -47,7 +57,7 @@ export default function LoginForm() {
                             label="Email"
                             type="email"
                             variant="bordered"
-                            placeholder="Enter your email"
+                            //placeholder="Enter your email"
                             {...register("email")}
                             isInvalid={!!errors.email}
                             aria-invalid={errors.email ? "true" : "false"}
@@ -57,7 +67,7 @@ export default function LoginForm() {
                             label="Password"
                             type={isVisibile ? "text" : "password"}
                             variant="bordered"
-                            placeholder="Enter your password"
+                            //placeholder="Enter your password"
                             isInvalid={!!errors.password}
                             aria-invalid={errors.password ? "true" : "false"}
                             errorMessage={errors.password?.message as string}
@@ -78,6 +88,7 @@ export default function LoginForm() {
                             {...register("password")}
                         />
                         <Button
+                            isLoading={isSubmitting}
                             isDisabled={!isValid}
                             fullWidth
                             color="secondary"
